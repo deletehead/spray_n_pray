@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+import argparse, sys
+import impacket
+
+def main():
+    parser = argparse.ArgumentParser('spray_n_pray')
+    parser.add_argument('protocol', help='Protocol to auth against: smb') #, ldap, krb5, mssql
+    parser.add_argument('-t',  '--targets', help='File listing of targets to authenticate against (ex. list of DC\'s)')
+    parser.add_argument('-u',  '--userlist', help='List of users to spray')
+    parser.add_argument('-p',  '--passlist', help='List of password attempts')
+    parser.add_argument('-wg',  '--global_wait', help='Seconds to wait between auth attempts (global). Default: none')
+    parser.add_argument('-wt',  '--target_wait', help='Seconds to wait between auth attempts (just per target). Default: none')
+
+    args = parser.parse_args()   
+    if args.targets and args.userlist and args.passlist:
+        try:
+            with open(args.targets) as targetfile:
+                targets = targetfile.readlines()
+                targets = [x.strip() for x in targets]
+            with open(args.userlist) as userfile:
+                users = userfile.readlines()
+                users = [x.strip() for x in users]
+            with open(args.passlist) as passfile:
+                users = userfile.readlines()
+                users = [x.strip() for x in users]
+        except:
+            print('[-] --targets, --userlist, and --passlist must be line-separated files')
+            sys.exit()
+    else:
+        print('[-] Required: --targets, --userlist, --passlist')
+        sys.exit()
+    if args.global_wait:
+        try:
+            gwait = int(args.global_wait)
+        except:
+            print('[-] --global_wait must be an int (seconds)')
+            sys.exit()
+    else:
+        gwait = 0
+    if args.tlobal_wait:
+        try:
+            twait = int(args.global_wait)
+        except:
+            print('[-] --global_wait must be an int (seconds)')
+            sys.exit()
+    else:
+        twait = 0
+     
+
+
+if __name__ == "__main__":
+    main()
