@@ -69,7 +69,6 @@ def main():
     print('[*] Password attack: trying '+str(len(passwds))+' passwords for '+str(len(users))+' users, distributed across '+str(len(targets))+' servers')
 
     # Main logic
-    #attempt = smb_login('127.0.0.1', 'corp.checkfree.com', 'jake', 'J@k3jake')
     lockout_seconds = lockout_window * 60
     tries = 0
     time_start = time.time()
