@@ -3,8 +3,8 @@ An SMB password spraying script built using basic Unix utilities, with basic eva
 
 ## Usage
 ```
-[USAGE] /opt/smb-spray.sh <USER_LIST> <SMB_SERVERS> <PASSWORD> <DOMAIN>
-[USAGE] /opt/smb-spray.sh <USER_LIST> <SMB_SERVERS> <PASSWORD> <DOMAIN> <JITTER>
+[USAGE]  /opt/smb-spray.sh <USER_LIST> <SMB_SERVERS> <PASSWORD> <DOMAIN>
+[USAGE]  /opt/smb-spray.sh <USER_LIST> <SMB_SERVERS> <PASSWORD> <DOMAIN> <JITTER>
 
 [USAGE]  USER_LIST   - Line-separated file list of users (e.g., jsmith, jdoe_adm)
 [USAGE]  SMB_SERVERS - Line-separated file list of SMB servers (e.g., FILESRV1.TARGET.ORG)
