@@ -13,6 +13,11 @@ An SMB password spraying script built using basic Unix utilities, with basic eva
 [USAGE]  JITTER      - OPTIONAL: Jitter delay in seconds (e.g., 5)
 ```
 
+#### Example
+```bash
+/opt/smb-spray.sh users.lst smbservers.lst 'P@ssw0rd!' TARGET.ORG 3
+```
+
 ## To Do
 - Auto-detect for NT hashes for PtH instead of cleartext
 - Test connection to target system before attempting to log in (sometimes client laptops may be offline and then the check fails automatically)
